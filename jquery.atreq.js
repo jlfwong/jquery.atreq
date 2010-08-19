@@ -50,7 +50,11 @@
     return reqs;
   }
 
-  $.atreq = function(urls) {
+  function absUrl(relPath) {
+    return (window.location + '').replace(/[^\/]*$/,'') + '/' + relPath;
+  }
+
+  $.atreq = function(urls, source) {
     if (! $.isArray(urls)) urls = [urls];
 
     $.each(urls,function(i,url) {
@@ -65,7 +69,7 @@
         type      : 'GET',
         success   : function(jsfile) {
           var reqs = getReqs(jsfile,basepath);
-          $.atreq(reqs);
+          $.atreq(reqs, url);
 
           setTimeout(function() {
             var complete = true;
@@ -79,23 +83,34 @@
             }
 
             if (complete) {
-              $.atreq.loaded[url] = true;
-              console.dir({
-                message  : "Ran: " + url,
-                requires : reqs
-              });
-              eval(jsfile);
+              try {
+                console.dir({
+                  message  : "Running: " + url,
+                  requires : reqs
+                });
+                eval(jsfile);
+                $.atreq.loaded[url] = true;
+              } catch(e) {
+                var err = new Error();
+                err.message = '[$.atreq] Error: ' + e.message
+                err.fileName = absUrl(url);
+                err.lineNumber = 1; // TODO
+                throw err;
+              }
             } else {
               setTimeout(arguments.callee, 10);
             }
           },10);
         },
         error     : function() {
-          var err = {
-            name:     'File Not Found Error',
-            message:  'Could not find file \"' + url + '\"'
-          };
-          console.error('[$.atreq] ' +  err.name + ': ' + err.message);
+          var err = new Error();
+          err.message = '[$.atreq] File Not Found Error: ' + url;
+          if (source) {
+            err.fileName = absUrl(source);
+          } else {
+            err.fileName = window.location;
+          }
+          err.lineNumber = 1; // TODO
           throw err;
         }
       });
