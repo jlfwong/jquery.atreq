@@ -94,7 +94,10 @@
                 var err = new Error();
                 err.message = '[$.atreq] Error: ' + e.message
                 err.fileName = absUrl(url);
-                err.lineNumber = 1; // TODO
+				// WARNING: This following relies on the fact that
+				// eval(jsfile) and var err are EXACTLY 3 lines apart
+				// this will NOT work if minified
+                err.lineNumber = e.lineNumber - err.lineNumber + 4;
                 throw err;
               }
             } else {
