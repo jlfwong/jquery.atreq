@@ -88,8 +88,8 @@
                   message  : "Running: " + url,
                   requires : reqs
                 });
-                eval(jsfile);
                 $.atreq.loaded[url] = true;
+                $.globalEval(jsfile);
               } catch(e) {
                 var err = new Error();
                 err.message = '[$.atreq] Error: ' + e.message
